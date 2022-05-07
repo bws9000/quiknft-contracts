@@ -62,9 +62,6 @@ describe('QuikOne', function () {
             await this.newToken.mintOneNftByOwner({ from: owner });
             await this.newToken.mintOneNftByOwner({ from: owner });
             const count = await this.newToken.balanceOf(owner);
-            console.log('owner of 0: ' + await this.newToken.ownerOf(0));
-            console.log('owner of 1: ' + await this.newToken.ownerOf(1));
-            console.log('owner of 2: ' + await this.newToken.ownerOf(2));
             expect(Number(count)).to.equal(2);
         });
 
