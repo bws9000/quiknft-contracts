@@ -1,33 +1,32 @@
 const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expect } = require('chai');
 
-describe('NftFactory', function () {
+describe('QuikOneFactory', function () {
 
   const [owner, addr1] = accounts;
 
   const NftFactory = contract.fromArtifact('NftFactory');
-  const NftFactoryItemERC721 = contract.fromArtifact('NftFactoryItemERC721');
+  const QuikOneItem = contract.fromArtifact('QuikOneItem');
 
-  beforeEach('Deploy NftFactory and NftFactoryItemERC721', async function () {
+  beforeEach('Deploy QuikOneFactory and NftFactoryItem', async function () {
     this.nftFactory = await NftFactory.new({ from: owner });
-    this.nftItem = await NftFactoryItemERC721.new({ from: owner });
+    this.nftItem = await QuikOneItem.new({ from: owner });
   });
 
   describe('NftFactory Owner', function () {
-    
-    it('NftFactory contract owner is sender', async function () {
+    it('NftFactory contract owner is deployer', async function () {
       expect(await this.nftFactory.owner()).to.equal(owner);
     });
 
   });
 
-  describe('Spawn Nft with NftFactory', function () {
+  describe('Spawn new NFT contract with NftFactory', function () {
 
-      it('Spawn New Nft', async function(){
+      it('Spawn New Nft Token', async function(){
         const receipt = await this.nftFactory.spawn(
           this.nftItem.address, 
-          'MyNFT', 
-          'MNFT', 
+          'QUIK', 
+          'QUIKONE', 
           'https://baseURI',
           [],
           { from: addr1 });
