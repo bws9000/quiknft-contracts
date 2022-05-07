@@ -2,9 +2,9 @@
 pragma solidity 0.8.9;
 
 import './interface/IFactoryItem.sol';
-import './BasicERC721.sol';
+import './QuikOne.sol';
 
-contract NftFactoryItemERC721 is IFactoryItem{
+contract NftFactoryItem is IFACTORYITEM{
      
     function spawnNft(
         string calldata name,
@@ -12,7 +12,7 @@ contract NftFactoryItemERC721 is IFactoryItem{
         string calldata uri,
         bytes calldata
     )external returns(address){
-        BasicERC721 nftToken = new BasicERC721(name,symbol,uri);
+        QuikOne nftToken = new QuikOne(name,symbol,uri);
         return address(nftToken);
     }
  }

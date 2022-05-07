@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import './interface/IFactoryItem.sol';
+import './interface/IFACTORYITEM.sol';
 
 contract NftFactory {
 
@@ -18,7 +18,7 @@ contract NftFactory {
         bytes calldata data
     ) external returns (address){
 
-        address nft = IFactoryItem(nftToSpawn).spawnNft(
+        address nft = IFACTORYITEM(nftToSpawn).spawnNft(
             name,
             symbol,
             uri,
