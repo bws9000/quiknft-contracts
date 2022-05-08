@@ -1,19 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import "./interface/IQUIKONE.sol";
+import "../interface/IQUIK.sol";
+import "../abstract/QuikRules.sol";
+
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 /**
 * @title QuikOne
 * @author snyder.burt@gmail.com and @OZ
-* @notice ERC721 IQUIKONE, ERC721, IERC2981
+* @notice ERC721 IQUIK, ERC721, IERC2981
 * @dev ERC721 contract extending OZ ERC721
 */
-contract QuikOne is IQUIKONE, ERC721, IERC2981 {
+contract QuikOne is ERC721, IERC2981, ERC721Enumerable, 
+QuikRules, IQUIK  {
+    
     using Counters for Counters.Counter;
+    
     using Address for address;
     using Strings for uint256;
 
@@ -22,14 +28,14 @@ contract QuikOne is IQUIKONE, ERC721, IERC2981 {
     event UpdateDefaultBaseURI ( string oldValue, string newValue);
     event UpdateNftTokenURI ( string oldValue, string newValue);
 
-    Counters.Counter private _tokenIds;
+    Counters.Counter public _tokenIdTracker;
 
-    address public contractOwner;
     uint256 public royalty;
-    bool public publicMintStatus;
-    string private defaultBaseURI;
+    bool internal publicMintStatus;
+    string internal defaultBaseURI;
+    address internal contractOwner;
 
-    mapping(uint256 => bool) private metadataFrozenURI;
+    mapping(uint256 => bool) public metadataFrozenURI;
     mapping(uint256 => string) private _individualNftTokenURIs;
 
     constructor(
@@ -43,65 +49,68 @@ contract QuikOne is IQUIKONE, ERC721, IERC2981 {
 
     /**
     *
-    * @inheritdoc IQUIKONE
+    * @inheritdoc IQUIK
     * @dev freeze metadata
     */
-    function setRoyaltyAmount(uint256 _amount) external onlyTheContractOwner {
+    function setRoyaltyAmount(uint256 _amount) 
+    external onlyTheContractOwner(contractOwner) {
         emit UpdateRoyaltyAmount(royalty,_amount);
         royalty = _amount;
     }
 
     /**
     *
-    * @inheritdoc IQUIKONE
+    * @inheritdoc IQUIK
     * @dev freeze metadata
     */
-    function setDefaultBaseURI(string calldata _uri) external onlyTheContractOwner {
+    function setDefaultBaseURI(string calldata _uri) 
+    external onlyTheContractOwner(contractOwner) {
         emit UpdateDefaultBaseURI(defaultBaseURI, _uri);
         defaultBaseURI = _uri;
     }
 
     /**
     *
-    * @inheritdoc IQUIKONE
+    * @inheritdoc IQUIK
     * @dev _safeMint one ERC721 only by owner
     */
-    function mintOneNftByOwner() external onlyTheContractOwner {
-        _safeMint(msg.sender, _tokenIds.current());
-        _tokenIds.increment();
+    function mintOneNftByOwner() 
+    external onlyTheContractOwner(contractOwner) {
+        _safeMint(msg.sender, _tokenIdTracker.current());
+        _tokenIdTracker.increment();
     }
 
     /**
     *
-    * @inheritdoc IQUIKONE
+    * @inheritdoc IQUIK
     * @dev public _safeMint one ERC721
     */
-    function mintOneNft() external virtual onlyIfPublicMintStatus {
-        require(false,"No public minting for QuikOne");
+    function mintOneNft() external virtual {
+        require(false,'Error: No public minting available for QuikOne');
     }
 
     /**
     *
-    * @inheritdoc IQUIKONE
+    * @inheritdoc IQUIK
     * @dev allow the public to mint one ERC721
     */
     function setPublicMintStatus(bool _mintStatus) 
-    external onlyTheContractOwner {
+    external onlyTheContractOwner(contractOwner) {
         emit UpdatedMintStatus( publicMintStatus, _mintStatus );
         publicMintStatus = _mintStatus;
     }
 
     /**
     *
-    * @inheritdoc IQUIKONE
+    * @inheritdoc IQUIK
     * @dev freeze metadata uri - can't be reversed only
     * by token (minted nft) owner
     */
     function freezeMetadataURI(uint256 tokenId) 
-    external onlyIfOwnerOfNft(tokenId) {
+    external onlyIfOwnerOfNft(tokenId, ownerOf(tokenId)) {
         address tokenOwner = ownerOf(tokenId);
         require(tokenOwner == msg.sender, 
-        "QuikNft: no token match for address");
+        "Error: no token match for address");
         metadataFrozenURI[tokenId] = true;
     }
     
@@ -129,44 +138,26 @@ contract QuikOne is IQUIKONE, ERC721, IERC2981 {
     * @dev https://eips.ethereum.org/EIPS/eip-2981
     *
     */
-    function supportsInterface (bytes4 interfaceId)
-    public 
-    view 
-    virtual 
-    override(ERC721,IERC165) returns (bool){
-        return interfaceId == type(IERC2981).interfaceId ||
-        super.supportsInterface(interfaceId);
-    }
+    // function supportsInterface (bytes4 interfaceId)
+    // public 
+    // view 
+    // virtual 
+    // override(ERC721,IERC165,ERC721Enumerable) returns (bool){
+    //     return interfaceId == type(IERC2981).interfaceId ||
+    //     super.supportsInterface(interfaceId);
+    // }
 
     /**
-    * @dev modifier that only the contract owner i.e. ( you deployed 
-    * the contract ) can perform operations
-    */
-    modifier onlyTheContractOwner {
-        require(
-            msg.sender == contractOwner,
-                'Only the Owner can call this function.'
-        );
-        _;
-    }
-
-    /**
-    * @dev enable/disable public minting perhaps
-    */
-    modifier onlyIfPublicMintStatus {
-        require(
-            publicMintStatus == true,
-                'Public minting is not available at this time'
-        );
-        _;
-    }
-
-    /*
-    * @dev perform operations only if you're the owner of this nft (tokenId)
-    */
-    modifier onlyIfOwnerOfNft(uint256 _tokenId) {
-        require(ownerOf(_tokenId) == msg.sender, "QuikNft: no token match for address");
-        _;
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721, IERC165, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 
     /**
@@ -188,21 +179,21 @@ contract QuikOne is IQUIKONE, ERC721, IERC2981 {
 
     /**
     *
-    * @inheritdoc IQUIKONE
+    * @inheritdoc IQUIK
     * @dev if I own this nft I should be able to set the the URI no? ... yes,
     * but only if I've set my own URI and I'm not using the defaut base URI
     * established by the contract owner/deployer
     */
     function setTokenURI(uint256 tokenId, string memory _tokenURI) 
-    external virtual onlyIfOwnerOfNft(tokenId) {
+    external virtual onlyIfOwnerOfNft(tokenId, ownerOf(tokenId)) {
         require(_exists(tokenId), 
-        "QuikNft: URI set of nonexistent token");
+        "Error: URI set of nonexistent token");
 
         require(!metadataFrozenURI[tokenId], 
-        "QuikNft: URI Frozen; cannot update");
+        "Error: URI Frozen; cannot update");
 
         require(bytes(_individualNftTokenURIs[tokenId]).length != 0,
-        "QuikNft: You have to set your own URI to freeze it");
+        "Error: You have to set your own URI to freeze it");
 
         emit UpdateNftTokenURI(_individualNftTokenURIs[tokenId], _tokenURI);
         _individualNftTokenURIs[tokenId] = _tokenURI;
@@ -228,6 +219,22 @@ contract QuikOne is IQUIKONE, ERC721, IERC2981 {
     */
     function _baseURI() internal view virtual override returns (string memory) {
         return defaultBaseURI;
+    }
+
+    /**
+    *
+    * @dev get my public mint status
+    */
+    function getPublicMintStatus() external view returns(bool){
+        return publicMintStatus;
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId);
     }
     
 }

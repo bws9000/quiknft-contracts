@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import './interface/IFactoryItem.sol';
-import './QuikOne.sol';
+import '../interface/IFACTORYITEM.sol';
+import '../ERC721/QuikOne.sol';
 
-contract NftFactoryItem is IFACTORYITEM{
+contract QuikOneItem is IFACTORYITEM{
      
     function spawnNft(
         string calldata name,

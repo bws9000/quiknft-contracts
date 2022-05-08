@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-interface IQUIKONE {
+interface IQUIK {
 
     function freezeMetadataURI(uint256 tokenId) external;
 
