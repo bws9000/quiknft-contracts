@@ -5,6 +5,7 @@ import "../interface/IQUIK.sol";
 import "../abstract/QuikRules.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
@@ -14,7 +15,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 * @notice ERC721 IQUIK, ERC721, IERC2981
 * @dev ERC721 contract extending OZ ERC721
 */
-contract QuikOne is ERC721, IERC2981, QuikRules, IQUIK  {
+contract QuikOne is ERC721, IERC2981, ERC721Enumerable, 
+QuikRules, IQUIK  {
     
     using Counters for Counters.Counter;
     
@@ -26,7 +28,7 @@ contract QuikOne is ERC721, IERC2981, QuikRules, IQUIK  {
     event UpdateDefaultBaseURI ( string oldValue, string newValue);
     event UpdateNftTokenURI ( string oldValue, string newValue);
 
-    Counters.Counter internal _tokenIds;
+    Counters.Counter public _tokenIdTracker;
 
     uint256 public royalty;
     bool internal publicMintStatus;
@@ -74,8 +76,8 @@ contract QuikOne is ERC721, IERC2981, QuikRules, IQUIK  {
     */
     function mintOneNftByOwner() 
     external onlyTheContractOwner(contractOwner) {
-        _safeMint(msg.sender, _tokenIds.current());
-        _tokenIds.increment();
+        _safeMint(msg.sender, _tokenIdTracker.current());
+        _tokenIdTracker.increment();
     }
 
     /**
@@ -136,13 +138,26 @@ contract QuikOne is ERC721, IERC2981, QuikRules, IQUIK  {
     * @dev https://eips.ethereum.org/EIPS/eip-2981
     *
     */
-    function supportsInterface (bytes4 interfaceId)
-    public 
-    view 
-    virtual 
-    override(ERC721,IERC165) returns (bool){
-        return interfaceId == type(IERC2981).interfaceId ||
-        super.supportsInterface(interfaceId);
+    // function supportsInterface (bytes4 interfaceId)
+    // public 
+    // view 
+    // virtual 
+    // override(ERC721,IERC165,ERC721Enumerable) returns (bool){
+    //     return interfaceId == type(IERC2981).interfaceId ||
+    //     super.supportsInterface(interfaceId);
+    // }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721, IERC165, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 
     /**
@@ -214,12 +229,12 @@ contract QuikOne is ERC721, IERC2981, QuikRules, IQUIK  {
         return publicMintStatus;
     }
 
-    /**
-    *
-    * @dev not using ERC721Enumerable ... yet
-    */
-    function currentTokenId() external view returns(uint256){
-        return Counters.current(_tokenIds);
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId);
     }
     
 }

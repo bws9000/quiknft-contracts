@@ -72,10 +72,12 @@ describe('QuikTwo', function () {
         });
       });
 
-      describe('testing other stuff...', function(){
-        it('testy', async function(){
-          const totalSupply = await this.newToken.currentTokenId();
-          console.log('totalSupply: ' + totalSupply);
+      describe('testing total supply', function(){
+        it('should return 2 for totalSupply', async function(){
+          await this.newToken.mintOneNft({ from: addr1 });
+          await this.newToken.mintOneNft({ from: addr1 });
+          const totalSupply = await this.newToken.totalSupply();
+          expect(Number(totalSupply)).to.equal(2);
         })
       });
 

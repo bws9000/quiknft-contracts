@@ -23,8 +23,8 @@ contract QuikTwo is QuikOne {
 
     function mintOneNft() external override 
     onlyIfPublicMintStatus(publicMintStatus) {
-        _safeMint(msg.sender, Counters.current(_tokenIds));
-        Counters.increment(_tokenIds);
+        _safeMint(msg.sender, _tokenIdTracker.current());
+        _tokenIdTracker.increment();
     }
     
 }

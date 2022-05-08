@@ -65,10 +65,12 @@ describe('QuikOne', function () {
             expect(Number(count)).to.equal(2);
         });
 
-        describe('testing other stuff...', function(){
-          it('testy', async function(){
-            const totalSupply = await this.newToken.currentTokenId();
-            console.log('totalSupply: ' + totalSupply);
+        describe('testing total supply', function(){
+          it('should return 2 for totalSupply', async function(){
+            await this.newToken.mintOneNftByOwner({ from: owner });
+            await this.newToken.mintOneNftByOwner({ from: owner });
+            const totalSupply = await this.newToken.totalSupply();
+            expect(Number(totalSupply)).to.equal(2);
           })
         });
 
