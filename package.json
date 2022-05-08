@@ -8,6 +8,10 @@
   "scripts": {
     "test": "truffle compile && mocha --recursive tests --timeout 5000 --exit"
   },
+  "engines": {
+    "node": "12.22.10",
+    "npm": "8.8.0"
+  },
   "dependencies": {
     "@openzeppelin/contracts": "^4.6.0",
     "@openzeppelin/test-environment": "^0.1.9",
