@@ -3,8 +3,6 @@ pragma solidity 0.8.9;
 
 interface IQUIK {
 
-    function freezeMetadataURI(uint256 tokenId) external;
-
     function setRoyaltyAmount(uint256 _amount) external;
 
     function setDefaultBaseURI(string calldata uri) external;

@@ -2,6 +2,7 @@
 pragma solidity 0.8.9;
 
 abstract contract QuikRules {
+
     
     modifier onlyIfPublicMintStatus(bool publicMintStatus) {
         require(
@@ -23,5 +24,7 @@ abstract contract QuikRules {
         require(_owner == msg.sender, "Error: no token match for address");
         _;
     }
+
+    function freezeMetadataURI(uint256 tokenId) virtual external;
     
 }

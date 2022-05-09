@@ -3,6 +3,7 @@ pragma solidity 0.8.9;
 
 import "../interface/IQUIK.sol";
 import "../abstract/QuikRules.sol";
+import "../abstract/SudoMarketplace.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -15,8 +16,8 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 * @notice ERC721 IQUIK, ERC721, IERC2981
 * @dev ERC721 contract extending OZ ERC721
 */
-contract QuikOne is ERC721, IERC2981, ERC721Enumerable, 
-QuikRules, IQUIK  {
+contract QuikOne is ERC721, IERC2981, ERC721Enumerable,
+QuikRules, IQUIK, SudoMarketplace  {
     
     using Counters for Counters.Counter;
     
@@ -27,6 +28,7 @@ QuikRules, IQUIK  {
     event UpdateRoyaltyAmount (uint256 oldValue, uint256 newValue);
     event UpdateDefaultBaseURI ( string oldValue, string newValue);
     event UpdateNftTokenURI ( string oldValue, string newValue);
+    event UpdatedNftPrice (uint256 oldValue, uint256 newValue);
 
     Counters.Counter public _tokenIdTracker;
 
@@ -102,12 +104,12 @@ QuikRules, IQUIK  {
 
     /**
     *
-    * @inheritdoc IQUIK
+    * @inheritdoc QuikRules
     * @dev freeze metadata uri - can't be reversed only
     * by token (minted nft) owner
     */
     function freezeMetadataURI(uint256 tokenId) 
-    external onlyIfOwnerOfNft(tokenId, ownerOf(tokenId)) {
+    external override onlyIfOwnerOfNft(tokenId, ownerOf(tokenId)) {
         address tokenOwner = ownerOf(tokenId);
         require(tokenOwner == msg.sender, 
         "Error: no token match for address");
@@ -235,6 +237,29 @@ QuikRules, IQUIK  {
         uint256 tokenId
     ) internal virtual override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    /**
+    *
+    *
+    * @dev once token price is set token immediately available for sale
+    */
+    function setTokenPrice(uint256 tokenId, uint256 tokenPrice) 
+    override external onlyIfOwnerOfNft(tokenId, ownerOf(tokenId)){
+        emit UpdatedNftPrice(SudoMarketplace.saleItems[tokenId], tokenPrice);
+        SudoMarketplace.saleItems[tokenId] = tokenPrice;
+    }
+
+    function getTokenPrice(uint256 tokenId) external view returns(uint256){
+        return SudoMarketplace.saleItems[tokenId];
+    }
+
+    function listTokensForSale() override external{
+        //
+    }
+
+    function withdraw() external onlyTheContractOwner(contractOwner){
+        payable(contractOwner).transfer(address(this).balance);
     }
     
 }
